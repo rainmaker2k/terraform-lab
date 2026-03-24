@@ -22,7 +22,7 @@ Before running Terraform, we need the application code.
 
 1. Create a directory: mkdir terraform-lambda-lab && cd terraform-lambda-lab  
 2. Create a folder for the code: mkdir lambda  
-3. Create lambda/lambda\_function.py and paste the following:
+3. Create lambda/lambda_function.py and paste the following:
 
 
 Python
@@ -32,7 +32,7 @@ import json
 def handler(event, context):  
     return {  
         'statusCode': 200,  
-        'body': json.dumps('Hello, World\!')  
+        'body': json.dumps('Hello, World!')  
     }
 ```
 ## ---
@@ -45,51 +45,51 @@ Terraform
 
 ```hcl
 terraform {  
-  required\_providers {  
-    aws \= { source \= "hashicorp/aws", version \= "\~\> 6.0" }  
-    archive \= { source \= "hashicorp/archive", version \= "2.7.1" }  
+  required_providers {  
+    aws = { source = "hashicorp/aws", version = "~> 6.0" }  
+    archive = { source = "hashicorp/archive", version = "2.7.1" }  
   }  
 }
 
 provider "aws" {  
-  region \= "eu-central-1"  
+  region = "eu-central-1"  
 }
 
-\# 1\. Package the code automatically  
-data "archive\_file" "lambda\_zip" {  
-  type        \= "zip"  
-  source\_file \= "lambda/lambda\_function.py"  
-  output\_path \= "lambda\_output/lambda\_function.zip"  
+# 1. Package the code automatically  
+data "archive_file" "lambda_zip" {  
+  type        = "zip"  
+  source_file = "lambda/lambda_function.py"  
+  output_path = "lambda_output/lambda_function.zip"  
 }
 
-\# 2\. IAM Role for Lambda  
-resource "aws\_iam\_role" "lambda\_exec" {  
-  name \= "lambda\_exec\_role"
+# 2. IAM Role for Lambda  
+resource "aws_iam_role" "lambda_exec" {  
+  name = "lambda_exec_role"
 
-  assume\_role\_policy \= jsonencode({  
-    Version \= "2012-10-17"  
-    Statement \= \[{  
-      Action \= "sts:AssumeRole"  
-      Effect \= "Allow"  
-      Principal \= { Service \= "lambda.amazonaws.com" }  
-    }\]  
+  assume_role_policy = jsonencode({  
+    Version = "2012-10-17"  
+    Statement = [{  
+      Action = "sts:AssumeRole"  
+      Effect = "Allow"  
+      Principal = { Service = "lambda.amazonaws.com" }  
+    }]  
   })  
 }
 
-resource "aws\_iam\_role\_policy\_attachment" "lambda\_exec\_policy" {  
-  role       \= aws\_iam\_role.lambda\_exec.name  
-  policy\_arn \= "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"  
+resource "aws_iam_role_policy_attachment" "lambda_exec_policy" {  
+  role       = aws_iam_role.lambda_exec.name  
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"  
 }
 
-\# 3\. The Lambda Function  
-resource "aws\_lambda\_function" "hello\_world" {  
-  function\_name \= "hello\_world"  
-  runtime       \= "python3.9"  
-  role          \= aws\_iam\_role.lambda\_exec.arn  
-  handler       \= "lambda\_function.handler"
+# 3. The Lambda Function  
+resource "aws_lambda_function" "hello_world" {  
+  function_name = "hello_world"  
+  runtime       = "python3.9"  
+  role          = aws_iam_role.lambda_exec.arn  
+  handler       = "lambda_function.handler"
 
-  filename         \= data.archive\_file.lambda\_zip.output\_path  
-  source\_code\_hash \= data.archive\_file.lambda\_zip.output\_base64sha256  
+  filename         = data.archive_file.lambda_zip.output_path  
+  source_code_hash = data.archive_file.lambda_zip.output_base64sha256  
 }
 ```
 ## ---
@@ -101,58 +101,58 @@ Append this to your main.tf. This creates the HTTP endpoint and links it to your
 Terraform
 
 ```hcl
-\# 1\. Create the REST API  
-resource "aws\_api\_gateway\_rest\_api" "hello\_api" {  
-  name \= "HelloAPI"  
+# 1. Create the REST API  
+resource "aws_api_gateway_rest_api" "hello_api" {  
+  name = "HelloAPI"  
 }
 
-\# 2\. Create the /hello path  
-resource "aws\_api\_gateway\_resource" "hello\_resource" {  
-  rest\_api\_id \= aws\_api\_gateway\_rest\_api.hello\_api.id  
-  parent\_id   \= aws\_api\_gateway\_rest\_api.hello\_api.root\_resource\_id  
-  path\_part   \= "hello"  
+# 2. Create the /hello path  
+resource "aws_api_gateway_resource" "hello_resource" {  
+  rest_api_id = aws_api_gateway_rest_api.hello_api.id  
+  parent_id   = aws_api_gateway_rest_api.hello_api.root_resource_id  
+  path_part   = "hello"  
 }
 
-resource "aws\_api\_gateway\_method" "hello\_method" {  
-  rest\_api\_id   \= aws\_api\_gateway\_rest\_api.hello\_api.id  
-  resource\_id   \= aws\_api\_gateway\_resource.hello\_resource.id  
-  http\_method   \= "GET"  
-  authorization \= "NONE"  
+resource "aws_api_gateway_method" "hello_method" {  
+  rest_api_id   = aws_api_gateway_rest_api.hello_api.id  
+  resource_id   = aws_api_gateway_resource.hello_resource.id  
+  http_method   = "GET"  
+  authorization = "NONE"  
 }
 
-\# 3\. Integrate with Lambda  
-resource "aws\_api\_gateway\_integration" "hello\_integration" {  
-  rest\_api\_id             \= aws\_api\_gateway\_rest\_api.hello\_api.id  
-  resource\_id             \= aws\_api\_gateway\_resource.hello\_resource.id  
-  http\_method             \= aws\_api\_gateway\_method.hello\_method.http\_method  
-  integration\_http\_method \= "POST"  
-  type                    \= "AWS\_PROXY"  
-  uri                     \= aws\_lambda\_function.hello\_world.invoke\_arn  
+# 3. Integrate with Lambda  
+resource "aws_api_gateway_integration" "hello_integration" {  
+  rest_api_id             = aws_api_gateway_rest_api.hello_api.id  
+  resource_id             = aws_api_gateway_resource.hello_resource.id  
+  http_method             = aws_api_gateway_method.hello_method.http_method  
+  integration_http_method = "POST"  
+  type                    = "AWS_PROXY"  
+  uri                     = aws_lambda_function.hello_world.invoke_arn  
 }
 
-\# 4\. Permission for API Gateway to call Lambda  
-resource "aws\_lambda\_permission" "allow\_api\_gateway" {  
-  statement\_id  \= "AllowExecutionFromAPIGateway"  
-  action        \= "lambda:InvokeFunction"  
-  function\_name \= aws\_lambda\_function.hello\_world.function\_name  
-  principal     \= "apigateway.amazonaws.com"  
-  source\_arn    \= "${aws\_api\_gateway\_rest\_api.hello\_api.execution\_arn}/\*/\*"  
+# 4. Permission for API Gateway to call Lambda  
+resource "aws_lambda_permission" "allow_api_gateway" {  
+  statement_id  = "AllowExecutionFromAPIGateway"  
+  action        = "lambda:InvokeFunction"  
+  function_name = aws_lambda_function.hello_world.function_name  
+  principal     = "apigateway.amazonaws.com"  
+  source_arn    = "${aws_api_gateway_rest_api.hello_api.execution_arn}/*/*"  
 }
 
-\# 5\. Deployment and Stage  
-resource "aws\_api\_gateway\_deployment" "hello\_deployment" {  
-  depends\_on  \= \[aws\_api\_gateway\_integration.hello\_integration\]  
-  rest\_api\_id \= aws\_api\_gateway\_rest\_api.hello\_api.id  
+# 5. Deployment and Stage  
+resource "aws_api_gateway_deployment" "hello_deployment" {  
+  depends_on  = [aws_api_gateway_integration.hello_integration]  
+  rest_api_id = aws_api_gateway_rest_api.hello_api.id  
 }
 
-resource "aws\_api\_gateway\_stage" "hello\_stage" {  
-  deployment\_id \= aws\_api\_gateway\_deployment.hello\_deployment.id  
-  rest\_api\_id   \= aws\_api\_gateway\_rest\_api.hello\_api.id  
-  stage\_name    \= "v1"  
+resource "aws_api_gateway_stage" "hello_stage" {  
+  deployment_id = aws_api_gateway_deployment.hello_deployment.id  
+  rest_api_id   = aws_api_gateway_rest_api.hello_api.id  
+  stage_name    = "v1"  
 }
 
-output "api\_endpoint" {  
-  value \= "https://${aws\_api\_gateway\_rest\_api.hello\_api.id}.execute-api.eu-central-1.amazonaws.com/v1/hello"  
+output "api_endpoint" {  
+  value = "https://${aws_api_gateway_rest_api.hello_api.id}.execute-api.eu-central-1.amazonaws.com/v1/hello"  
 }
 ```
 ## ---
@@ -161,7 +161,7 @@ output "api\_endpoint" {
 
 1. Run terraform init.  
 2. Run terraform apply and type yes.  
-3. Copy the api\_endpoint from the output and paste it into your browser.
+3. Copy the api_endpoint from the output and paste it into your browser.
 
 ## ---
 
@@ -170,14 +170,14 @@ output "api\_endpoint" {
 | Issue | Solution |
 | :---- | :---- |
 | **502 Bad Gateway** | Your Python code is missing the statusCode or body keys in the return dictionary. |
-| **403 Forbidden** | The aws\_lambda\_permission resource is missing or incorrect. |
-| **Lambda not updating** | Ensure source\_code\_hash is present in the aws\_lambda\_function block. |
+| **403 Forbidden** | The aws_lambda_permission resource is missing or incorrect. |
+| **Lambda not updating** | Ensure source_code_hash is present in the aws_lambda_function block. |
 
 ---
 
 **Would you like me to add a section on how to view the logs in CloudWatch?**
 
 **Sources**  
-1\. [https://cloving.ai/tutorials/how-to-generate-serverless-functions-using-gpt](https://cloving.ai/tutorials/how-to-generate-serverless-functions-using-gpt)  
-2\. [https://github.com/alokagarwal/deploy-lambda-with-terraform](https://github.com/alokagarwal/deploy-lambda-with-terraform)  
-3\. [https://github.com/alokagarwal/deploy-lambda-with-terraform](https://github.com/alokagarwal/deploy-lambda-with-terraform)
+1. [https://cloving.ai/tutorials/how-to-generate-serverless-functions-using-gpt](https://cloving.ai/tutorials/how-to-generate-serverless-functions-using-gpt)  
+2. [https://github.com/alokagarwal/deploy-lambda-with-terraform](https://github.com/alokagarwal/deploy-lambda-with-terraform)  
+3. [https://github.com/alokagarwal/deploy-lambda-with-terraform](https://github.com/alokagarwal/deploy-lambda-with-terraform)
