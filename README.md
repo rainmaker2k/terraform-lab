@@ -24,8 +24,9 @@ Before running Terraform, we need the application code.
 2. Create a folder for the code: mkdir lambda  
 3. Create lambda/lambda\_function.py and paste the following:
 
-Python
 
+Python
+```python
 import json
 
 def handler(event, context):  
@@ -33,7 +34,7 @@ def handler(event, context):
         'statusCode': 200,  
         'body': json.dumps('Hello, World\!')  
     }
-
+```
 ## ---
 
 **📦 Step 2: Define the Lambda Resource**
@@ -42,6 +43,7 @@ Create a file named main.tf. Add the provider configuration and the Lambda logic
 
 Terraform
 
+```hcl
 terraform {  
   required\_providers {  
     aws \= { source \= "hashicorp/aws", version \= "\~\> 6.0" }  
@@ -89,7 +91,7 @@ resource "aws\_lambda\_function" "hello\_world" {
   filename         \= data.archive\_file.lambda\_zip.output\_path  
   source\_code\_hash \= data.archive\_file.lambda\_zip.output\_base64sha256  
 }
-
+```
 ## ---
 
 **🌐 Step 3: Define the API Gateway**
@@ -98,6 +100,7 @@ Append this to your main.tf. This creates the HTTP endpoint and links it to your
 
 Terraform
 
+```hcl
 \# 1\. Create the REST API  
 resource "aws\_api\_gateway\_rest\_api" "hello\_api" {  
   name \= "HelloAPI"  
@@ -151,7 +154,7 @@ resource "aws\_api\_gateway\_stage" "hello\_stage" {
 output "api\_endpoint" {  
   value \= "https://${aws\_api\_gateway\_rest\_api.hello\_api.id}.execute-api.eu-central-1.amazonaws.com/v1/hello"  
 }
-
+```
 ## ---
 
 **🚀 Step 4: Deployment & Testing**
