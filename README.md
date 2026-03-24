@@ -165,6 +165,9 @@ output "api_endpoint" {
 
 ## ---
 
+**Bonus**
+- In the first exercise you created an S3 bucket. Try to change your Terraform setup to make use of the S3 bucket as a remote backend.
+
 **🛠️ Troubleshooting**
 
 | Issue | Solution |
